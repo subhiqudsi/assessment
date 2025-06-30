@@ -122,7 +122,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # storage conf
-STORAGE_BACKEND = os.environ.get('STORAGE_BACKEND')
+STORAGE_BACKEND = os.environ.get('STORAGE_BACKEND', 'local')
 
 # AWS_STORAGE_BUCKET_NAME = "your-bucket"
 # AWS_ACCESS_KEY_ID = "..."

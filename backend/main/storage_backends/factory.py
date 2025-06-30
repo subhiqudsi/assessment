@@ -4,7 +4,7 @@ from .local import LocalStorage
 from .s3 import S3Storage
 
 def get_storage_backend():
-    backend = getattr(settings, 'STORAGE_BACKEND', 'local')
+    backend = settings.STORAGE_BACKEND
 
     if backend == 's3':
         return S3Storage()
