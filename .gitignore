@@ -1,2 +1,5 @@
 .idea
 backend/data/pgdata
+backend/logs
+backend/media
+backend/db.sqlite3
