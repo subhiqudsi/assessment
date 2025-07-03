@@ -37,12 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'drf_spectacular',
+    'job_application'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.middleware.common.Commondleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -115,11 +120,92 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': os.environ.get('ELASTICSEARCH_HOSTS', 'localhost:9200').split(','),
+        'use_ssl': os.environ.get('ELASTICSEARCH_USE_SSL', 'False').lower() == 'true',
+        'verify_certs': os.environ.get('ELASTICSEARCH_VERIFY_CERTS', 'True').lower() == 'true',
+    }
+}
+
+ELASTICSEARCH_AUTH_TYPE = os.environ.get('ELASTICSEARCH_AUTH_TYPE', 'basic')  # 'basic' or 'api_key'
+ELASTICSEARCH_USERNAME = os.environ.get('ELASTICSEARCH_USERNAME', '')
+ELASTICSEARCH_PASSWORD = os.environ.get('ELASTICSEARCH_PASSWORD', '')
+ELASTICSEARCH_API_KEY = os.environ.get('ELASTICSEARCH_API_KEY', '')
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'hr_system.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'elasticsearch': {
+            'level': 'INFO',
+            'class': 'main.logging_handlers.ElasticsearchHandler',
+            'hosts': ELASTICSEARCH_DSL['default']['hosts'],
+            'use_ssl': ELASTICSEARCH_DSL['default']['use_ssl'],
+            'verify_certs': ELASTICSEARCH_DSL['default']['verify_certs'],
+            'auth_type': ELASTICSEARCH_AUTH_TYPE,
+            'auth_details': {
+                'username': ELASTICSEARCH_USERNAME,
+                'password': ELASTICSEARCH_PASSWORD,
+                'api_key': ELASTICSEARCH_API_KEY,
+            },
+            'index_name': 'hr-system-logs',
+            'buffer_size': 100,
+            'flush_interval': 1.0,
+        },
+    },
+    'loggers': {
+        'hr_system': {
+            'handlers': ['file', 'console', 'elasticsearch'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+import os
+logs_dir = BASE_DIR / 'logs'
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
 
 # storage conf
 STORAGE_BACKEND = os.environ.get('STORAGE_BACKEND', 'local')
@@ -128,3 +214,68 @@ STORAGE_BACKEND = os.environ.get('STORAGE_BACKEND', 'local')
 # AWS_ACCESS_KEY_ID = "..."
 # AWS_SECRET_ACCESS_KEY = "..."
 # AWS_S3_REGION_NAME = "eu-central-1"
+
+# REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Job Application Management API',
+    'DESCRIPTION': 'A comprehensive API for managing job applications, candidates, and HR workflows',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {
+        'name': 'HR System Team',
+        'email': 'hr-system@company.com',
+    },
+    'LICENSE': {
+        'name': 'MIT License',
+        'url': 'https://opensource.org/licenses/MIT',
+    },
+    'TAGS': [
+        {
+            'name': 'Info',
+            'description': 'System information and health check endpoints'
+        },
+        {
+            'name': 'Candidates',
+            'description': 'Public candidate registration and status checking'
+        },
+        {
+            'name': 'Admin',
+            'description': 'Administrative endpoints for managing candidates and applications'
+        },
+    ],
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SORT_OPERATIONS': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,
+        'docExpansion': 'list',
+        'filter': True,
+        'showExtensions': True,
+        'tryItOutEnabled': True,
+    },
+    'REDOC_UI_SETTINGS': {
+        'hideDownloadButton': False,
+        'expandResponses': 'all',
+        'pathInMiddlePanel': True,
+        'requiredPropsFirst': True,
+        'noAutoAuth': False,
+        'scrollYOffset': 0,
+        'hideHostname': False,
+        'hideLoading': False,
+        'nativeScrollbars': False,
+        'sortPropsAlphabetically': True,
+        'suppressWarnings': False,
+        'payloadSampleIdx': 0,
+        'menuToggle': True,
+        'jsonSampleExpandLevel': 2,
+        'hideSingleRequestSampleTab': True,
+    },
+}

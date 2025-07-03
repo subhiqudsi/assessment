@@ -1,0 +1,33 @@
+# Global configuration for the HR System
+global:
+  domain: hr-system.local
+  
+# Backend configuration
+backend:
+  enabled: true
+  # Override backend values
+  ingress:
+    hosts:
+      - host: api.hr-system.local
+        paths:
+          - path: /
+            pathType: Prefix
+  env:
+    - name: ALLOWED_HOSTS
+      value: "api.hr-system.local,localhost,127.0.0.1"
+    - name: CORS_ALLOWED_ORIGINS
+      value: "http://hr-system.local,http://localhost:3000"
+
+# Frontend configuration  
+frontend:
+  enabled: true
+  # Override frontend values
+  ingress:
+    hosts:
+      - host: hr-system.local
+        paths:
+          - path: /
+            pathType: Prefix
+  env:
+    - name: NEXT_PUBLIC_API_URL
+      value: "http://api.hr-system.local/api"

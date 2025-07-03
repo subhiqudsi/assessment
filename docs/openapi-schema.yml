@@ -1,0 +1,753 @@
+openapi: 3.0.3
+info:
+  title: Job Application Management API
+  version: 1.0.0
+  description: A comprehensive API for managing job applications, candidates, and
+    HR workflows
+  contact:
+    name: HR System Team
+    email: hr-system@company.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /api/info/:
+    get:
+      operationId: api_info
+      description: "\n    Retrieve comprehensive information about the Job Application\
+        \ API including:\n    - Available endpoints and their paths\n    - Supported\
+        \ departments and application statuses\n    - File upload constraints and\
+        \ formats\n    - API version information\n    \n    This endpoint is publicly\
+        \ accessible and provides essential information for API consumers.\n    "
+      summary: Get API information and metadata
+      tags:
+      - Info
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: API information retrieved successfully
+                examples:
+                  application/json:
+                    version: 1.0.0
+                    name: Job Application Management API
+                    description: API for managing job applications and candidates
+                    endpoints:
+                    - path: /api/candidates/register/
+                      method: POST
+                      description: Register a new candidate
+                    - path: /api/candidates/{id}/status/
+                      method: GET
+                      description: Check candidate status by ID
+                    departments:
+                    - IT
+                    - HR
+                    - FINANCE
+                    statuses:
+                    - SUBMITTED
+                    - UNDER_REVIEW
+                    - INTERVIEW_SCHEDULED
+                    - REJECTED
+                    - ACCEPTED
+                    file_constraints:
+                      max_size_mb: 5
+                      allowed_formats:
+                      - pdf
+                      - docx
+          description: ''
+  /api/health/:
+    get:
+      operationId: health_check
+      description: "\n    Check the health and status of the Job Application API system\
+        \ including:\n    - Database connectivity\n    - System status\n    - Basic\
+        \ statistics\n    - Timestamp for monitoring\n    \n    This endpoint is useful\
+        \ for monitoring, alerting, and load balancer health checks.\n    "
+      summary: System health check
+      tags:
+      - Info
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: System is healthy
+                examples:
+                  application/json:
+                    status: ok
+                    database_connection: connected
+                    total_candidates: 1250
+                    timestamp: '2024-01-01T12:00:00Z'
+                    version: 1.0.0
+                    uptime_info: System operational
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                description: System is unhealthy
+                examples:
+                  application/json:
+                    status: error
+                    database_connection: failed
+                    error: Database connection timeout
+                    timestamp: '2024-01-01T12:00:00Z'
+          description: ''
+  /api/candidates/register/:
+    post:
+      operationId: candidate_register
+      description: "\n        Register a new candidate for a job position. This endpoint\
+        \ accepts multipart/form-data \n        to handle file uploads for resumes.\
+        \ All fields are required.\n        \n        **File Requirements:**\n   \
+        \     - Format: PDF or DOCX only\n        - Size: Maximum 5MB\n        - The\
+        \ file will be validated for format and content\n        \n        **Age Requirement:**\n\
+        \        - Candidates must be at least 16 years old\n        \n        **Uniqueness:**\n\
+        \        - Email addresses must be unique across all candidates\n        -\
+        \ Phone numbers must be unique across all candidates\n        "
+      summary: Register a new job candidate
+      tags:
+      - Candidates
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandidateRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandidateRegistrationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+              examples:
+                CompleteRegistrationData:
+                  value:
+                    full_name: John Doe
+                    email: john.doe@example.com
+                    phone_number: '+1234567890'
+                    date_of_birth: '1990-01-01'
+                    years_of_experience: 5
+                    department: IT
+                    resume: (binary file data)
+                  summary: Complete Registration Data
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/candidates/{candidate_id}/status/:
+    get:
+      operationId: candidate_status_check_2
+      description: "\n        Check the status of a candidate's job application. You\
+        \ can check status either by:\n        1. Candidate ID (in URL path)\n   \
+        \     2. Email address (as query parameter)\n        \n        The response\
+        \ includes current status, latest feedback, and when the status was last updated.\n\
+        \        "
+      summary: Check candidate application status
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      - in: query
+        name: email
+        schema:
+          type: string
+          format: email
+        description: Email address of the candidate (alternative to candidate_id)
+      tags:
+      - Candidates
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Candidate status retrieved successfully
+                examples:
+                  application/json:
+                    success: true
+                    candidate:
+                      id: 123
+                      full_name: John Doe
+                      email: john.doe@example.com
+                      status: UNDER_REVIEW
+                      status_display: Under Review
+                      department: IT
+                      department_display: Information Technology
+                      latest_feedback: Application looks promising
+                      created_at: '2024-01-01T12:00:00Z'
+                      updated_at: '2024-01-02T10:30:00Z'
+                      status_updated_at: '2024-01-02T10:30:00Z'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Missing required parameters
+                examples:
+                  application/json:
+                    success: false
+                    message: Candidate ID or email is required
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Candidate not found
+                examples:
+                  application/json:
+                    success: false
+                    message: Candidate not found
+          description: ''
+  /api/candidates/status/:
+    get:
+      operationId: candidate_status_check
+      description: "\n        Check the status of a candidate's job application. You\
+        \ can check status either by:\n        1. Candidate ID (in URL path)\n   \
+        \     2. Email address (as query parameter)\n        \n        The response\
+        \ includes current status, latest feedback, and when the status was last updated.\n\
+        \        "
+      summary: Check candidate application status
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      - in: query
+        name: email
+        schema:
+          type: string
+          format: email
+        description: Email address of the candidate (alternative to candidate_id)
+      tags:
+      - Candidates
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Candidate status retrieved successfully
+                examples:
+                  application/json:
+                    success: true
+                    candidate:
+                      id: 123
+                      full_name: John Doe
+                      email: john.doe@example.com
+                      status: UNDER_REVIEW
+                      status_display: Under Review
+                      department: IT
+                      department_display: Information Technology
+                      latest_feedback: Application looks promising
+                      created_at: '2024-01-01T12:00:00Z'
+                      updated_at: '2024-01-02T10:30:00Z'
+                      status_updated_at: '2024-01-02T10:30:00Z'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Missing required parameters
+                examples:
+                  application/json:
+                    success: false
+                    message: Candidate ID or email is required
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Candidate not found
+                examples:
+                  application/json:
+                    success: false
+                    message: Candidate not found
+          description: ''
+  /api/candidates/{candidate_id}/history/:
+    get:
+      operationId: candidate_status_history
+      description: "\n        Retrieve the complete history of status changes for\
+        \ a specific candidate.\n        Shows all status transitions with timestamps,\
+        \ comments, and who made the changes.\n        \n        History is ordered\
+        \ by newest changes first.\n        "
+      summary: Get candidate status change history
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      tags:
+      - Candidates
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Status history retrieved successfully
+                examples:
+                  application/json:
+                    success: true
+                    candidate_id: 123
+                    candidate_name: John Doe
+                    current_status: UNDER_REVIEW
+                    status_history:
+                    - id: 456
+                      previous_status: SUBMITTED
+                      previous_status_display: Submitted
+                      new_status: UNDER_REVIEW
+                      new_status_display: Under Review
+                      comments: Application meets initial requirements
+                      changed_by: hr_manager
+                      changed_at: '2024-01-02T10:30:00Z'
+                    - id: 455
+                      previous_status: null
+                      previous_status_display: null
+                      new_status: SUBMITTED
+                      new_status_display: Submitted
+                      comments: Initial application submitted
+                      changed_by: system
+                      changed_at: '2024-01-01T12:00:00Z'
+          description: ''
+  /api/admin/candidates/:
+    get:
+      operationId: admin_candidates_list
+      description: "\n        **Admin Only**: Retrieve a paginated list of all candidates\
+        \ with advanced filtering options.\n        \n        **Authentication Required**:\
+        \ X-ADMIN: 1 header\n        \n        **Filtering Options:**\n        - Department:\
+        \ Filter by specific department (IT, HR, FINANCE)\n        - Status: Filter\
+        \ by application status (SUBMITTED, UNDER_REVIEW, etc.)\n        - Search:\
+        \ Search by candidate name or email address\n        \n        **Pagination:**\n\
+        \        - Default page size: 20 candidates\n        - Maximum page size:\
+        \ 100 candidates\n        - Use `page` parameter to navigate through pages\n\
+        \        - Use `page_size` parameter to control items per page\n        "
+      summary: List all candidates with filtering and pagination
+      parameters:
+      - in: query
+        name: department
+        schema:
+          type: string
+          enum:
+          - FINANCE
+          - HR
+          - IT
+        description: Filter by department
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number for pagination
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page (max 100)
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search by candidate name or email
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - ACCEPTED
+          - INTERVIEW_SCHEDULED
+          - REJECTED
+          - SUBMITTED
+          - UNDER_REVIEW
+        description: Filter by application status
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - count
+                - results
+                properties:
+                  count:
+                    type: integer
+                    example: 123
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                    example: http://api.example.org/accounts/?page=4
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                    example: http://api.example.org/accounts/?page=2
+                  results:
+                    type: array
+                    items:
+                      description: Candidates retrieved successfully
+                      examples:
+                        application/json:
+                          success: true
+                          total_count: 150
+                          candidates:
+                          - id: 123
+                            full_name: John Doe
+                            email: john.doe@example.com
+                            phone_number: '+1234567890'
+                            date_of_birth: '1990-01-01'
+                            age: 34
+                            years_of_experience: 5
+                            department: IT
+                            department_display: Information Technology
+                            status: UNDER_REVIEW
+                            status_display: Under Review
+                            has_resume: true
+                            created_at: '2024-01-01T12:00:00Z'
+                            updated_at: '2024-01-02T10:30:00Z'
+                          count: 150
+                          next: http://localhost:8000/api/admin/candidates/?page=2
+                          previous: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                description: Admin authentication required
+                examples:
+                  application/json:
+                    error: Admin access required
+          description: ''
+  /api/admin/candidates/{candidate_id}/:
+    get:
+      operationId: admin_candidate_detail
+      description: "\n        **Admin Only**: Retrieve comprehensive details about\
+        \ a specific candidate including:\n        - All personal and professional\
+        \ information\n        - Complete status change history\n        - Resume\
+        \ filename information\n        \n        **Authentication Required**: X-ADMIN:\
+        \ 1 header\n        "
+      summary: Get detailed candidate information
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Candidate details retrieved successfully
+                examples:
+                  application/json:
+                    success: true
+                    candidate:
+                      id: 123
+                      full_name: John Doe
+                      email: john.doe@example.com
+                      phone_number: '+1234567890'
+                      date_of_birth: '1990-01-01'
+                      age: 34
+                      years_of_experience: 5
+                      department: IT
+                      department_display: Information Technology
+                      status: UNDER_REVIEW
+                      status_display: Under Review
+                      has_resume: true
+                      resume_filename: john_doe_resume.pdf
+                      created_at: '2024-01-01T12:00:00Z'
+                      updated_at: '2024-01-02T10:30:00Z'
+                      status_history:
+                      - id: 456
+                        previous_status: SUBMITTED
+                        new_status: UNDER_REVIEW
+                        comments: Application meets requirements
+                        changed_by: hr_manager
+                        changed_at: '2024-01-02T10:30:00Z'
+          description: ''
+  /api/admin/candidates/{candidate_id}/status/:
+    patch:
+      operationId: admin_update_candidate_status
+      description: "\n        **Admin Only**: Update a candidate's application status\
+        \ with optional comments.\n        \n        **Authentication Required**:\
+        \ X-ADMIN: 1 header\n        \n        **Status Transitions:**\n        -\
+        \ SUBMITTED → UNDER_REVIEW → INTERVIEW_SCHEDULED → ACCEPTED/REJECTED\n   \
+        \     - Any status can transition to REJECTED\n        \n        **Automatic\
+        \ Actions:**\n        - Creates a status history record\n        - Sends notification\
+        \ to candidate (if configured)\n        - Logs the status change\n       \
+        \ \n        **Validation:**\n        - Cannot set status to the same value\n\
+        \        - All status values are validated against allowed choices\n     \
+        \   "
+      summary: Update candidate application status
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      tags:
+      - Admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStatusUpdateRequest'
+            examples:
+              StatusUpdateWithComments:
+                value:
+                  status: INTERVIEW_SCHEDULED
+                  comments: Interview scheduled for next Monday at 2 PM
+                  changed_by: hr_manager_001
+                summary: Status Update with Comments
+              SimpleStatusUpdate:
+                value:
+                  status: UNDER_REVIEW
+                summary: Simple Status Update
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStatusUpdateRequest'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Status updated successfully
+                examples:
+                  application/json:
+                    success: true
+                    message: Status updated successfully
+                    candidate_id: 123
+                    previous_status: SUBMITTED
+                    new_status: UNDER_REVIEW
+                    updated_at: '2024-01-02T10:30:00Z'
+              examples:
+                StatusUpdateWithComments:
+                  value:
+                    status: INTERVIEW_SCHEDULED
+                    comments: Interview scheduled for next Monday at 2 PM
+                    changed_by: hr_manager_001
+                  summary: Status Update with Comments
+                SimpleStatusUpdate:
+                  value:
+                    status: UNDER_REVIEW
+                  summary: Simple Status Update
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Validation error
+                examples:
+                  application/json:
+                    success: false
+                    message: Validation failed
+                    errors:
+                      status:
+                      - Candidate is already in this status.
+          description: ''
+  /api/admin/candidates/{candidate_id}/download/:
+    get:
+      operationId: admin_download_resume
+      description: "\n        **Admin Only**: Download the resume file for a specific\
+        \ candidate.\n        \n        **Authentication Required**: X-ADMIN: 1 header\n\
+        \        \n        **File Information:**\n        - Returns the original uploaded\
+        \ file (PDF or DOCX)\n        - Filename includes candidate name for easy\
+        \ identification\n        - Proper content-type headers are set for browser\
+        \ handling\n        - Download activity is logged for audit purposes\n   \
+        \     \n        **Error Handling:**\n        - Returns 404 if candidate has\
+        \ no resume\n        - Returns 404 if file doesn't exist in storage\n    \
+        \    - Returns 500 if file cannot be read\n        "
+      summary: Download candidate resume file
+      parameters:
+      - in: path
+        name: candidate_id
+        schema:
+          type: integer
+        description: Unique ID of the candidate
+        required: true
+      tags:
+      - Admin
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Resume file download
+                content:
+                  application/pdf: {}
+                  application/vnd.openxmlformats-officedocument.wordprocessingml.document: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Resume not found
+                examples:
+                  application/json:
+                    success: false
+                    message: Resume not found for this candidate
+          description: ''
+components:
+  schemas:
+    CandidateRegistrationRequest:
+      type: object
+      description: Serializer for candidate registration
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          description: Candidate's full name
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+          description: Unique email address for the candidate
+          maxLength: 254
+        phone_number:
+          type: string
+          minLength: 1
+          description: Unique phone number for the candidate
+          maxLength: 20
+        date_of_birth:
+          type: string
+          format: date
+          description: Candidate's date of birth
+        years_of_experience:
+          type: integer
+          maximum: 50
+          minimum: 0
+          description: Years of professional experience
+        department:
+          allOf:
+          - $ref: '#/components/schemas/DepartmentEnum'
+          description: |-
+            Department the candidate is applying for
+
+            * `IT` - Information Technology
+            * `HR` - Human Resources
+            * `FINANCE` - Finance
+        resume:
+          type: string
+          format: binary
+          pattern: (?:pdf|docx)$
+      required:
+      - date_of_birth
+      - department
+      - email
+      - full_name
+      - phone_number
+      - resume
+      - years_of_experience
+    DepartmentEnum:
+      enum:
+      - IT
+      - HR
+      - FINANCE
+      type: string
+      description: |-
+        * `IT` - Information Technology
+        * `HR` - Human Resources
+        * `FINANCE` - Finance
+    PatchedStatusUpdateRequest:
+      type: object
+      description: Serializer for updating candidate status
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        comments:
+          type: string
+          maxLength: 1000
+        changed_by:
+          type: string
+          minLength: 1
+          default: admin
+          maxLength: 255
+    StatusEnum:
+      enum:
+      - SUBMITTED
+      - UNDER_REVIEW
+      - INTERVIEW_SCHEDULED
+      - REJECTED
+      - ACCEPTED
+      type: string
+      description: |-
+        * `SUBMITTED` - Submitted
+        * `UNDER_REVIEW` - Under Review
+        * `INTERVIEW_SCHEDULED` - Interview Scheduled
+        * `REJECTED` - Rejected
+        * `ACCEPTED` - Accepted
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+tags:
+- name: Info
+  description: System information and health check endpoints
+- name: Candidates
+  description: Public candidate registration and status checking
+- name: Admin
+  description: Administrative endpoints for managing candidates and applications

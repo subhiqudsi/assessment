@@ -1,0 +1,882 @@
+{
+  "info": {
+    "_postman_id": "job-application-api-collection",
+    "name": "Job Application API",
+    "description": "Complete API collection for the Job Application Management System with automated tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "candidateId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "candidateEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "randomEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "randomPhone",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Base Information",
+      "item": [
+        {
+          "name": "API Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('version');",
+                  "    pm.expect(jsonData).to.have.property('endpoints');",
+                  "    pm.expect(jsonData).to.have.property('departments');",
+                  "    pm.expect(jsonData).to.have.property('statuses');",
+                  "    pm.expect(jsonData).to.have.property('file_constraints');",
+                  "});",
+                  "",
+                  "pm.test(\"Departments include IT, HR, and FINANCE\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.departments).to.include.members(['IT', 'HR', 'FINANCE']);",
+                  "});",
+                  "",
+                  "pm.test(\"File constraints are properly defined\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.file_constraints).to.have.property('max_size_mb');",
+                  "    pm.expect(jsonData.file_constraints).to.have.property('allowed_formats');",
+                  "    pm.expect(jsonData.file_constraints.allowed_formats).to.include.members(['pdf', 'docx']);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/info/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "info", ""]
+            },
+            "description": "Get API information including version, available endpoints, departments, statuses, and file constraints"
+          }
+        },
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Health check returns OK status\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('ok');",
+                  "});",
+                  "",
+                  "pm.test(\"Database connection is successful\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.database_connection).to.eql('connected');",
+                  "});",
+                  "",
+                  "pm.test(\"Response includes timestamp\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health", ""]
+            },
+            "description": "Check system health status and database connectivity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidate Public Endpoints",
+      "item": [
+        {
+          "name": "Register Candidate",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate random email and phone for testing",
+                  "const randomNum = Math.floor(Math.random() * 100000);",
+                  "const randomEmail = `test.user.${randomNum}@example.com`;",
+                  "const randomPhone = `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`;",
+                  "",
+                  "pm.collectionVariables.set(\"randomEmail\", randomEmail);",
+                  "pm.collectionVariables.set(\"randomPhone\", randomPhone);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains candidate ID\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('candidate_id');",
+                  "    ",
+                  "    // Store candidate ID for future requests",
+                  "    pm.collectionVariables.set(\"candidateId\", jsonData.candidate_id);",
+                  "    pm.collectionVariables.set(\"candidateEmail\", pm.collectionVariables.get(\"randomEmail\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Initial status is SUBMITTED\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('SUBMITTED');",
+                  "});",
+                  "",
+                  "pm.test(\"Response includes success message\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('successfully');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 2000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "full_name",
+                  "value": "Test Candidate",
+                  "type": "text",
+                  "description": "Full name of the candidate (required)"
+                },
+                {
+                  "key": "email",
+                  "value": "{{randomEmail}}",
+                  "type": "text",
+                  "description": "Email address (required, must be unique)"
+                },
+                {
+                  "key": "phone_number",
+                  "value": "{{randomPhone}}",
+                  "type": "text",
+                  "description": "Phone number (required, must be unique)"
+                },
+                {
+                  "key": "date_of_birth",
+                  "value": "1990-01-01",
+                  "type": "text",
+                  "description": "Date of birth in YYYY-MM-DD format (candidate must be 16+ years old)"
+                },
+                {
+                  "key": "years_of_experience",
+                  "value": "5",
+                  "type": "text",
+                  "description": "Years of experience (0-50)"
+                },
+                {
+                  "key": "department",
+                  "value": "IT",
+                  "type": "text",
+                  "description": "Department: IT, HR, or FINANCE (required)"
+                },
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": "test_resume.txt",
+                  "description": "Resume file (PDF or DOCX, max 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "register", ""]
+            },
+            "description": "Register a new job candidate with resume upload"
+          }
+        },
+        {
+          "name": "Check Status by Candidate ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains candidate information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('candidate_id');",
+                  "    pm.expect(jsonData).to.have.property('full_name');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('department');",
+                  "});",
+                  "",
+                  "pm.test(\"Candidate ID matches request\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const requestedId = pm.request.url.path[3];",
+                  "    pm.expect(jsonData.candidate_id.toString()).to.eql(requestedId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/status/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "{{candidateId}}", "status", ""]
+            },
+            "description": "Check application status using candidate ID"
+          }
+        },
+        {
+          "name": "Check Status by Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains candidate information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('candidate_id');",
+                  "    pm.expect(jsonData).to.have.property('full_name');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test(\"Email matches request\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const requestedEmail = pm.request.url.query.get('email');",
+                  "    pm.expect(jsonData.email).to.eql(requestedEmail);",
+                  "});",
+                  "",
+                  "pm.test(\"Invalid email returns 404\", function () {",
+                  "    if (pm.request.url.query.get('email') === 'nonexistent@example.com') {",
+                  "        pm.response.to.have.status(404);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/status/?email={{candidateEmail}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "status", ""],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{candidateEmail}}",
+                  "description": "Email address of the candidate (required)"
+                }
+              ]
+            },
+            "description": "Check application status using email address"
+          }
+        },
+        {
+          "name": "Get Status History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains history array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('candidate');",
+                  "    pm.expect(jsonData).to.have.property('history');",
+                  "    pm.expect(jsonData.history).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"History entries have required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.history.length > 0) {",
+                  "        const firstEntry = jsonData.history[0];",
+                  "        pm.expect(firstEntry).to.have.property('status');",
+                  "        pm.expect(firstEntry).to.have.property('changed_at');",
+                  "        pm.expect(firstEntry).to.have.property('changed_by');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"History is sorted by date (newest first)\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.history.length > 1) {",
+                  "        const dates = jsonData.history.map(h => new Date(h.changed_at));",
+                  "        for (let i = 1; i < dates.length; i++) {",
+                  "            pm.expect(dates[i-1] >= dates[i]).to.be.true;",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/history/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "{{candidateId}}", "history", ""]
+            },
+            "description": "Get complete status change history for a candidate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Endpoints",
+      "item": [
+        {
+          "name": "List All Candidates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 with admin header\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has pagination structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('count');",
+                  "    pm.expect(jsonData).to.have.property('next');",
+                  "    pm.expect(jsonData).to.have.property('previous');",
+                  "    pm.expect(jsonData).to.have.property('results');",
+                  "    pm.expect(jsonData.results).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Candidate objects have required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.results.length > 0) {",
+                  "        const candidate = jsonData.results[0];",
+                  "        pm.expect(candidate).to.have.property('id');",
+                  "        pm.expect(candidate).to.have.property('full_name');",
+                  "        pm.expect(candidate).to.have.property('email');",
+                  "        pm.expect(candidate).to.have.property('department');",
+                  "        pm.expect(candidate).to.have.property('status');",
+                  "        pm.expect(candidate).to.have.property('created_at');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Requires admin authentication\", function () {",
+                  "    // This would fail without X-ADMIN header",
+                  "    const hasAdminHeader = pm.request.headers.has('X-ADMIN');",
+                  "    pm.expect(hasAdminHeader).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-ADMIN",
+                "value": "1",
+                "type": "text",
+                "description": "Admin authentication header (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/candidates/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "candidates", ""],
+              "query": [
+                {
+                  "key": "department",
+                  "value": "IT",
+                  "description": "Filter by department (IT, HR, FINANCE)",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "SUBMITTED",
+                  "description": "Filter by status (SUBMITTED, UNDER_REVIEW, INTERVIEW_SCHEDULED, REJECTED, ACCEPTED)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "john",
+                  "description": "Search by name or email",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination",
+                  "disabled": true
+                },
+                {
+                  "key": "page_size",
+                  "value": "20",
+                  "description": "Items per page (default: 20, max: 100)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all candidates with filtering and pagination options"
+          }
+        },
+        {
+          "name": "Get Candidate Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains detailed candidate information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('full_name');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('phone_number');",
+                  "    pm.expect(jsonData).to.have.property('date_of_birth');",
+                  "    pm.expect(jsonData).to.have.property('years_of_experience');",
+                  "    pm.expect(jsonData).to.have.property('department');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('resume');",
+                  "    pm.expect(jsonData).to.have.property('created_at');",
+                  "    pm.expect(jsonData).to.have.property('updated_at');",
+                  "});",
+                  "",
+                  "pm.test(\"Response includes status history\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status_history');",
+                  "    pm.expect(jsonData.status_history).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Invalid candidate ID returns 404\", function () {",
+                  "    const candidateId = pm.request.url.path[4];",
+                  "    if (candidateId === '99999') {",
+                  "        pm.response.to.have.status(404);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-ADMIN",
+                "value": "1",
+                "type": "text",
+                "description": "Admin authentication header (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/candidates/{{candidateId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "candidates", "{{candidateId}}", ""]
+            },
+            "description": "Get detailed information about a specific candidate including status history"
+          }
+        },
+        {
+          "name": "Update Candidate Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status was updated successfully\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('updated');",
+                  "});",
+                  "",
+                  "pm.test(\"New status matches request\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    pm.expect(jsonData.new_status).to.eql(requestBody.status);",
+                  "});",
+                  "",
+                  "pm.test(\"Invalid status returns 400\", function () {",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    if (requestBody.status === 'INVALID_STATUS') {",
+                  "        pm.response.to.have.status(400);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Response includes history entry\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.history_entry) {",
+                  "        pm.expect(jsonData.history_entry).to.have.property('changed_at');",
+                  "        pm.expect(jsonData.history_entry).to.have.property('changed_by');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-ADMIN",
+                "value": "1",
+                "type": "text",
+                "description": "Admin authentication header (required)"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"UNDER_REVIEW\",\n    \"comments\": \"Application looks promising, scheduling interview\",\n    \"changed_by\": \"hr_manager_001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/candidates/{{candidateId}}/status/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "candidates", "{{candidateId}}", "status", ""]
+            },
+            "description": "Update a candidate's application status. Status options: SUBMITTED, UNDER_REVIEW, INTERVIEW_SCHEDULED, REJECTED, ACCEPTED"
+          }
+        },
+        {
+          "name": "Download Resume",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is a file download\", function () {",
+                  "    pm.expect(pm.response.headers.has('Content-Disposition')).to.be.true;",
+                  "    const contentDisposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(contentDisposition).to.include('attachment');",
+                  "});",
+                  "",
+                  "pm.test(\"Content type is appropriate for file\", function () {",
+                  "    const contentType = pm.response.headers.get('Content-Type');",
+                  "    const validTypes = [",
+                  "        'application/pdf',",
+                  "        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',",
+                  "        'application/octet-stream'",
+                  "    ];",
+                  "    pm.expect(validTypes).to.include(contentType);",
+                  "});",
+                  "",
+                  "pm.test(\"File size is reasonable\", function () {",
+                  "    const contentLength = pm.response.headers.get('Content-Length');",
+                  "    if (contentLength) {",
+                  "        const sizeInMB = parseInt(contentLength) / (1024 * 1024);",
+                  "        pm.expect(sizeInMB).to.be.below(5); // Max 5MB as per constraints",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-ADMIN",
+                "value": "1",
+                "type": "text",
+                "description": "Admin authentication header (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/candidates/{{candidateId}}/download/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "candidates", "{{candidateId}}", "download", ""]
+            },
+            "description": "Download a candidate's resume file (PDF or DOCX)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "Unauthorized Admin Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 without admin header\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message indicates authentication required\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/candidates/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "candidates", ""]
+            },
+            "description": "Test unauthorized access to admin endpoints"
+          }
+        },
+        {
+          "name": "Invalid Candidate Registration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 for invalid data\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response contains field errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('object');",
+                  "    // Should contain validation errors for missing/invalid fields",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "full_name",
+                  "value": "",
+                  "type": "text",
+                  "description": "Empty name should fail"
+                },
+                {
+                  "key": "email",
+                  "value": "invalid-email",
+                  "type": "text",
+                  "description": "Invalid email format"
+                },
+                {
+                  "key": "years_of_experience",
+                  "value": "100",
+                  "type": "text",
+                  "description": "Experience exceeds maximum (50)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "register", ""]
+            },
+            "description": "Test validation errors in candidate registration"
+          }
+        },
+        {
+          "name": "Duplicate Email Registration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 for duplicate email\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error indicates email already exists\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const errorString = JSON.stringify(jsonData).toLowerCase();",
+                  "    pm.expect(errorString).to.include('email');",
+                  "    pm.expect(errorString).to.include('already');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "full_name",
+                  "value": "Duplicate Test",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "{{candidateEmail}}",
+                  "type": "text",
+                  "description": "Using already registered email"
+                },
+                {
+                  "key": "phone_number",
+                  "value": "+19999999999",
+                  "type": "text"
+                },
+                {
+                  "key": "date_of_birth",
+                  "value": "1990-01-01",
+                  "type": "text"
+                },
+                {
+                  "key": "years_of_experience",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "department",
+                  "value": "IT",
+                  "type": "text"
+                },
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": "test_resume.txt"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "register", ""]
+            },
+            "description": "Test duplicate email validation"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Executing request:', pm.info.requestName);",
+          "",
+          "// Set default timeout",
+          "pm.request.timeout = 30000; // 30 seconds"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test(\"Response time is acceptable\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log response for debugging",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error Response:', pm.response.text());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hr-backend.fullname" . }}-config
+  labels:
+    {{- include "hr-backend.labels" . | nindent 4 }}
+data:
+  DATABASE_HOST: {{ .Values.database.host | quote }}
+  DATABASE_PORT: {{ .Values.database.port | quote }}
+  DATABASE_NAME: {{ .Values.database.name | quote }}
+  DATABASE_USER: {{ .Values.database.user | quote }}
+  STORAGE_TYPE: {{ .Values.storage.type | quote }}
+  STORAGE_PATH: {{ .Values.storage.path | quote }}
+  LOGGING_LEVEL: {{ .Values.logging.level | quote }}
+  {{- if .Values.logging.elasticsearch.enabled }}
+  ELASTICSEARCH_HOST: {{ .Values.logging.elasticsearch.host | quote }}
+  ELASTICSEARCH_PORT: {{ .Values.logging.elasticsearch.port | quote }}
+  {{- end }}

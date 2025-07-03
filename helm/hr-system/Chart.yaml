@@ -1,0 +1,22 @@
+apiVersion: v2
+name: hr-system
+description: A Helm umbrella chart for the complete HR System
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - hr
+  - system
+  - complete
+maintainers:
+  - name: HR System Team
+    email: team@hr-system.com
+dependencies:
+  - name: hr-backend
+    version: "0.1.0"
+    repository: "file://../backend"
+    condition: backend.enabled
+  - name: hr-frontend
+    version: "0.1.0"
+    repository: "file://../frontend"
+    condition: frontend.enabled
