@@ -90,10 +90,10 @@ export default function CandidateRegister() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-900 mb-6">
             Your application has been submitted successfully. Your candidate ID is: <strong>{candidateId}</strong>
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-900 mb-6">
             Please save this ID to check your application status later.
           </p>
           <div className="space-y-3">
@@ -181,7 +181,7 @@ export default function CandidateRegister() {
             />
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Resume (PDF or DOCX, max 5MB)
               </label>
               <input

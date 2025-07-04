@@ -90,19 +90,19 @@ export default function CandidateStatus() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Application Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-500">Full Name</p>
+                    <p className="text-sm text-gray-900">Full Name</p>
                     <p className="font-medium">{status.full_name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Department</p>
+                    <p className="text-sm text-gray-900">Department</p>
                     <p className="font-medium">{status.department}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Candidate ID</p>
+                    <p className="text-sm text-gray-900">Candidate ID</p>
                     <p className="font-medium">{status.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Current Status</p>
+                    <p className="text-sm text-gray-900">Current Status</p>
                     <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status.status)}`}>
                       {status.status}
                     </span>
@@ -117,12 +117,12 @@ export default function CandidateStatus() {
                     <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status.status)}`}>
                       {status.status}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-900">
                       {format(new Date(status.updated_at), 'MMM dd, yyyy HH:mm')}
                     </span>
                   </div>
                   {status.feedback && (
-                    <p className="text-gray-700 mt-2">{status.feedback}</p>
+                    <p className="text-gray-900 mt-2">{status.feedback}</p>
                   )}
                 </div>
               </div>
@@ -137,12 +137,12 @@ export default function CandidateStatus() {
                           <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(item.status)}`}>
                             {item.status}
                           </span>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-900">
                             {format(new Date(item.updated_at), 'MMM dd, yyyy HH:mm')}
                           </span>
                         </div>
                         {item.feedback && (
-                          <p className="text-gray-700 mt-2">{item.feedback}</p>
+                          <p className="text-gray-900 mt-2">{item.feedback}</p>
                         )}
                       </div>
                     ))}

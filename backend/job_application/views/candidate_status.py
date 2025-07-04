@@ -91,8 +91,9 @@ class CandidateStatusView(APIView):
     
     permission_classes = [AllowAny]
     
-    def get(self, request, email):
+    def get(self, request):
         """Get candidate status by ID or email"""
+        email = request.query_params.get('email', None)
         try:
             # Get candidate by ID or email
             if email:

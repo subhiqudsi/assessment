@@ -9,7 +9,7 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             HR Management System
           </h1>
-          <p className="text-xl text-gray-600 mb-12">
+          <p className="text-xl text-gray-900 mb-12">
             Apply for positions or manage applications
           </p>
         </div>
@@ -17,7 +17,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">For Candidates</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-900 mb-6">
               Register and submit your application with your resume. Track your application status in real-time.
             </p>
             <div className="space-y-3">
@@ -34,7 +34,7 @@ export default function Home() {
 
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">For HR Managers</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-900 mb-6">
               Access the admin dashboard to review candidates, download resumes, and manage application statuses.
             </p>
             <Link href="/admin/dashboard" className="block">
