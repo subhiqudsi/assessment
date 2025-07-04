@@ -90,7 +90,7 @@ export default function AdminDashboard() {
     try {
       await adminApi.patch(`/candidates/${selectedCandidate.id}/status/`, {
         status: newStatus,
-        feedback: feedback,
+        comments: feedback,
       });
 
       setShowStatusModal(false);

@@ -12,13 +12,13 @@ interface ApplicationStatus {
   id: number;
   status: string;
   updated_at: string;
-  feedback?: string;
+  latest_feedback?: string;
   full_name: string;
   department: string;
   history?: {
     status: string;
     updated_at: string;
-    feedback?: string;
+    comments?: string;
   }[];
 }
 
@@ -121,8 +121,8 @@ export default function CandidateStatus() {
                       {format(new Date(status.updated_at), 'MMM dd, yyyy HH:mm')}
                     </span>
                   </div>
-                  {status.feedback && (
-                    <p className="text-gray-900 mt-2">{status.feedback}</p>
+                  {status.latest_feedback && (
+                    <p className="text-gray-900 mt-2">{status.latest_feedback}</p>
                   )}
                 </div>
               </div>
@@ -141,8 +141,8 @@ export default function CandidateStatus() {
                             {format(new Date(item.updated_at), 'MMM dd, yyyy HH:mm')}
                           </span>
                         </div>
-                        {item.feedback && (
-                          <p className="text-gray-900 mt-2">{item.feedback}</p>
+                        {item.comments && (
+                          <p className="text-gray-900 mt-2">{item.comments}</p>
                         )}
                       </div>
                     ))}
