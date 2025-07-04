@@ -35,7 +35,7 @@ urlpatterns = [
     # API Endpoints
     path('api/info/', views.api_info, name='api_info'),
     path('api/health/', views.health_check, name='health_check'),
-    path('', include('job_application.urls')),
+    path('api/', include('job_application.urls')),
 ]
 
 # Serve media files during development

@@ -11,6 +11,8 @@ import { DEPARTMENTS } from '@/utils/constants';
 
 interface FormData {
   full_name: string;
+  email: string;
+  phone_number: string;
   date_of_birth: string;
   years_of_experience: string;
   department: string;
@@ -22,6 +24,7 @@ export default function CandidateRegister() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [candidateId, setCandidateId] = useState<number | null>(null);
+  const [submittedEmail, setSubmittedEmail] = useState<string>('');
 
   const {
     register,
@@ -36,6 +39,8 @@ export default function CandidateRegister() {
     try {
       const formData = new FormData();
       formData.append('full_name', data.full_name);
+      formData.append('email', data.email);
+      formData.append('phone_number', data.phone_number);
       formData.append('date_of_birth', data.date_of_birth);
       formData.append('years_of_experience', data.years_of_experience);
       formData.append('department', data.department);
@@ -47,9 +52,19 @@ export default function CandidateRegister() {
         },
       });
 
-      setCandidateId(response.data.id);
+      setCandidateId(response.data.candidate_id);
+      setSubmittedEmail(data.email);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'An error occurred during registration');
+      if (err.response?.data?.errors) {
+        // Handle validation errors
+        const errors = err.response.data.errors;
+        const errorMessages = Object.entries(errors).map(([field, messages]: [string, any]) => 
+          `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+        ).join('\n');
+        setError(`Validation failed:\n${errorMessages}`);
+      } else {
+        setError(err.response?.data?.message || err.response?.data?.detail || 'An error occurred during registration');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -83,17 +98,17 @@ export default function CandidateRegister() {
           </p>
           <div className="space-y-3">
             <Button
-              onClick={() => router.push(`/candidate/status?id=${candidateId}`)}
+              onClick={() => router.push(`/candidate/status?email=${encodeURIComponent(submittedEmail)}`)}
               className="w-full"
             >
               Check Application Status
             </Button>
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => router.push('/')}
               variant="secondary"
               className="w-full"
             >
-              Submit Another Application
+              Return to Homepage
             </Button>
           </div>
         </div>
@@ -109,7 +124,7 @@ export default function CandidateRegister() {
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">
-              {error}
+              <pre className="whitespace-pre-wrap text-sm">{error}</pre>
             </div>
           )}
 
@@ -118,6 +133,26 @@ export default function CandidateRegister() {
               label="Full Name"
               {...register('full_name', { required: 'Full name is required' })}
               error={errors.full_name?.message}
+            />
+
+            <Input
+              label="Email"
+              type="email"
+              {...register('email', { 
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address'
+                }
+              })}
+              error={errors.email?.message}
+            />
+
+            <Input
+              label="Phone Number"
+              type="tel"
+              {...register('phone_number', { required: 'Phone number is required' })}
+              error={errors.phone_number?.message}
             />
 
             <Input
@@ -166,7 +201,7 @@ export default function CandidateRegister() {
                     },
                   },
                 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
               {errors.resume && <p className="mt-1 text-sm text-red-600">{errors.resume.message}</p>}
             </div>

@@ -24,14 +24,14 @@ interface ApplicationStatus {
 
 export default function CandidateStatus() {
   const searchParams = useSearchParams();
-  const [candidateId, setCandidateId] = useState(searchParams.get('id') || '');
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [status, setStatus] = useState<ApplicationStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const checkStatus = async () => {
-    if (!candidateId) {
-      setError('Please enter a candidate ID');
+    if (!email) {
+      setError('Please enter your email address');
       return;
     }
 
@@ -40,17 +40,17 @@ export default function CandidateStatus() {
     setStatus(null);
 
     try {
-      const response = await api.get(`/candidates/${candidateId}/status/`);
-      setStatus(response.data);
+      const response = await api.get(`/candidates/status/?email=${encodeURIComponent(email)}`);
+      setStatus(response.data.candidate);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch application status');
+      setError(err.response?.data?.message || 'Failed to fetch application status');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (candidateId) {
+    if (email) {
       checkStatus();
     }
   }, []);
@@ -67,9 +67,10 @@ export default function CandidateStatus() {
 
           <div className="flex gap-4 mb-8">
             <Input
-              placeholder="Enter your candidate ID"
-              value={candidateId}
-              onChange={(e) => setCandidateId(e.target.value)}
+              placeholder="Enter your email address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="flex-1"
             />
             <Button onClick={checkStatus} disabled={loading}>

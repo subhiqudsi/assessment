@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { DEPARTMENTS, STATUS_COLORS } from '@/utils/constants';
 import { format } from 'date-fns';
-import { useAdmin } from '@/hooks/useAdmin';
 import { Download, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Candidate {
@@ -21,15 +20,16 @@ interface Candidate {
 }
 
 interface PaginatedResponse {
+  success: boolean;
+  total_count: number;
+  results: Candidate[];
   count: number;
   next: string | null;
   previous: string | null;
-  results: Candidate[];
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { isAdmin } = useAdmin();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,12 +42,9 @@ export default function AdminDashboard() {
   const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
-    if (!isAdmin) {
-      router.push('/admin/login');
-      return;
-    }
+
     fetchCandidates();
-  }, [isAdmin, department, page]);
+  }, [ department, page]);
 
   const fetchCandidates = async () => {
     setLoading(true);
@@ -174,20 +171,20 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {candidates.map((candidate) => (
+                  {candidates?.map((candidate) => (
                     <tr key={candidate.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{candidate.full_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">{candidate.full_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                         {format(new Date(candidate.date_of_birth), 'MMM dd, yyyy')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{candidate.years_of_experience} years</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{candidate.department}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">{candidate.years_of_experience} years</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">{candidate.department}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(candidate.status)}`}>
                           {candidate.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                         {format(new Date(candidate.created_at), 'MMM dd, yyyy')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -243,9 +240,9 @@ export default function AdminDashboard() {
       </div>
 
       {showStatusModal && selectedCandidate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Update Application Status</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Update Application Status</h2>
             <p className="text-gray-600 mb-4">
               Updating status for: <strong>{selectedCandidate.full_name}</strong>
             </p>
@@ -253,11 +250,11 @@ export default function AdminDashboard() {
             <Select
               label="New Status"
               options={[
-                { value: 'Submitted', label: 'Submitted' },
-                { value: 'Under Review', label: 'Under Review' },
-                { value: 'Interview Scheduled', label: 'Interview Scheduled' },
-                { value: 'Rejected', label: 'Rejected' },
-                { value: 'Accepted', label: 'Accepted' },
+                { value: 'SUBMITTED', label: 'Submitted' },
+                { value: 'UNDER_REVIEW', label: 'Under Review' },
+                { value: 'INTERVIEW_SCHEDULED', label: 'Interview Scheduled' },
+                { value: 'REJECTED', label: 'Rejected' },
+                { value: 'ACCEPTED', label: 'Accepted' },
               ]}
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value)}
@@ -268,7 +265,7 @@ export default function AdminDashboard() {
                 Feedback (Optional)
               </label>
               <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 rows={3}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}

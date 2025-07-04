@@ -1,19 +1,38 @@
-.PHONY: build logs run push build-frontend run-frontend install-frontend helm-apply helm-delete helm-upgrade help
+.PHONY: build logs run run-services run-web stop push build-frontend run-frontend install-frontend migrate test populate-candidates populate-candidates-large clear-populate-candidates createsuperuser shell dbshell check collectstatic helm-apply helm-delete helm-upgrade help
 
 # Default tag if not provided
 TAG ?= latest
+BACKEND_REPO ?= backend
+FRONTEND_REPO ?= frontend
+
 
 build:
-	docker build -t backend ./backend
+	docker build -t backend -t $(BACKEND_REPO):$(TAG) ./backend
 
 build-frontend:
-	docker build -t frontend ./frontend
+	docker build -t frontend -t $(FRONTEND_REPO):$(TAG) ./frontend
 
 logs:
-	docker-compose -f backend/docker-compose.yml logs -f
+	docker-compose -f backend/docker-compose.yml --env-file backend/.env logs -f
 
 run:
-	docker-compose -f backend/docker-compose.yml up -d
+	@echo "Starting supporting services (PostgreSQL, Elasticsearch)..."
+	docker-compose -f backend/docker-compose.services.yml up -d
+	@echo "Starting web application..."
+	docker-compose -f backend/docker-compose.yml --env-file backend/.env up -d
+
+run-services:
+	@echo "Starting supporting services only (PostgreSQL, Elasticsearch)..."
+	docker-compose -f backend/docker-compose.services.yml up -d
+
+run-web:
+	@echo "Starting web application only..."
+	docker-compose -f backend/docker-compose.yml --env-file backend/.env up -d
+
+stop:
+	@echo "Stopping all services..."
+	docker-compose -f backend/docker-compose.yml down
+	docker-compose -f backend/docker-compose.services.yml down
 
 install-frontend:
 	@echo "Installing frontend dependencies..."
@@ -22,6 +41,49 @@ install-frontend:
 run-frontend:
 	@echo "Starting frontend development server..."
 	cd frontend && npm run dev
+
+migrate:
+	@echo "Running backend database migrations..."
+	docker exec backend-web-1 python manage.py migrate
+
+test:
+	@echo "Running backend tests..."
+	docker exec backend-web-1 python manage.py test
+
+# Data management commands
+populate-candidates:
+	@echo "Populating database with test candidates..."
+	docker exec backend-web-1 python manage.py populate_candidates --count 1000
+
+populate-candidates-large:
+	@echo "Populating database with large dataset..."
+	docker exec backend-web-1 python manage.py populate_candidates --count 100000
+
+clear-populate-candidates:
+	@echo "Clearing and repopulating database with test candidates..."
+	docker exec backend-web-1 python manage.py populate_candidates --clear
+
+# Django admin commands
+createsuperuser:
+	@echo "Creating Django superuser..."
+	docker exec -it backend-web-1 python manage.py createsuperuser
+
+shell:
+	@echo "Opening Django shell..."
+	docker exec -it backend-web-1 python manage.py shell
+
+dbshell:
+	@echo "Opening database shell..."
+	docker exec -it backend-web-1 python manage.py dbshell
+
+# Development utilities
+check:
+	@echo "Running Django system checks..."
+	docker exec backend-web-1 python manage.py check
+
+collectstatic:
+	@echo "Collecting static files..."
+	docker exec backend-web-1 python manage.py collectstatic --noinput
 
 push:
 	@if [ -z "$(TAG)" ]; then \
@@ -81,10 +143,29 @@ help:
 	@echo "  build              - Build backend Docker image"
 	@echo "  build-frontend     - Build frontend Docker image"
 	@echo "  logs              - Show docker-compose logs"
-	@echo "  run               - Run backend with docker-compose"
+	@echo "  run               - Run all services (PostgreSQL, Elasticsearch, Django)"
+	@echo "  run-services       - Run supporting services only (PostgreSQL, Elasticsearch)"
+	@echo "  run-web           - Run web application only (requires services to be running)"
+	@echo "  stop              - Stop all running services"
 	@echo "  install-frontend   - Install frontend dependencies"
 	@echo "  run-frontend       - Run frontend development server locally"
+	@echo "  migrate           - Run backend database migrations"
+	@echo "  test              - Run backend tests"
 	@echo "  push TAG=<tag>    - Push backend image with tag"
+	@echo ""
+	@echo "Data Management Commands:"
+	@echo "  populate-candidates       - Create 1,000 test candidates"
+	@echo "  populate-candidates-large - Create 100,000 test candidates"
+	@echo "  clear-populate-candidates - Clear and create 1,000 test candidates"
+	@echo ""
+	@echo "Django Admin Commands:"
+	@echo "  createsuperuser    - Create Django superuser (interactive)"
+	@echo "  shell             - Open Django shell (interactive)"
+	@echo "  dbshell           - Open database shell (interactive)"
+	@echo ""
+	@echo "Development Utilities:"
+	@echo "  check             - Run Django system checks"
+	@echo "  collectstatic     - Collect static files"
 	@echo ""
 	@echo "Helm Commands:"
 	@echo "  helm-apply [TAG=<tag>]        - Deploy complete HR system (default: latest)"

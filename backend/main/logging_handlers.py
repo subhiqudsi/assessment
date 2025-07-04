@@ -17,25 +17,38 @@ class ElasticsearchHandler(logging.Handler):
         self.buffer = []
         self.buffer_size = buffer_size
         self.flush_interval = flush_interval
-        
-        es_config = {
-            'hosts': hosts,
-            'use_ssl': use_ssl,
-            'verify_certs': verify_certs,
-        }
-        
-        if auth_type == 'basic' and auth_details:
-            es_config['basic_auth'] = (auth_details.get('username'), auth_details.get('password'))
-        elif auth_type == 'api_key' and auth_details:
-            es_config['api_key'] = auth_details.get('api_key')
-        
-        self.es = Elasticsearch(**es_config)
+        self.es = None
         
         try:
-            if not self.es.ping():
-                raise Exception("Could not connect to Elasticsearch")
+            # Simple configuration for Elasticsearch client
+            es_config = {
+                'hosts': hosts,
+                'timeout': 5,  # 5 second timeout
+            }
+            
+            if auth_type == 'basic' and auth_details:
+                username = auth_details.get('username')
+                password = auth_details.get('password')
+                if username and password:
+                    es_config['basic_auth'] = (username, password)
+            elif auth_type == 'api_key' and auth_details:
+                api_key = auth_details.get('api_key')
+                if api_key:
+                    es_config['api_key'] = api_key
+            
+            self.es = Elasticsearch(**es_config)
+            
+            # Test connection with timeout - don't fail if ES is not ready
+            try:
+                if not self.es.ping():
+                    print(f"Warning: Elasticsearch at {hosts} is not responding")
+                    self.es = None
+            except Exception as ping_error:
+                print(f"Warning: Cannot ping Elasticsearch: {ping_error}")
+                self.es = None
+                
         except Exception as e:
-            logging.error(f"Failed to connect to Elasticsearch: {e}")
+            print(f"Warning: Failed to initialize Elasticsearch handler: {e}")
             self.es = None
     
     def emit(self, record):
@@ -53,7 +66,9 @@ class ElasticsearchHandler(logging.Handler):
                 self.flush()
                 
         except Exception as e:
-            self.handleError(record)
+            # Avoid infinite recursion by not using logging here
+            print(f"Elasticsearch handler error: {e}")
+            # Don't call handleError to avoid recursion
     
     def format_record(self, record):
         log_entry = {
@@ -123,7 +138,10 @@ class ElasticsearchHandler(logging.Handler):
             helpers.bulk(self.es, self.buffer)
             self.buffer = []
         except Exception as e:
-            logging.error(f"Failed to write logs to Elasticsearch: {e}")
+            # Use print instead of logging to avoid recursion
+            print(f"Failed to write logs to Elasticsearch: {e}")
+            # Clear buffer to prevent infinite retry
+            self.buffer = []
     
     def close(self):
         self.flush()

@@ -47,8 +47,12 @@ assessment/
 ### Local Development
 
 ```bash
-# 1. Start backend services
+# 1. Start all backend services (PostgreSQL, Elasticsearch, Django)
 make run
+
+# Alternative: Start services separately for more control
+make run-services    # Start PostgreSQL & Elasticsearch
+make run-web        # Start Django application
 
 # 2. Install and start frontend
 make install-frontend
@@ -57,6 +61,9 @@ make run-frontend
 # 3. Access applications
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8000
+
+# 4. Stop all services when done
+make stop
 ```
 
 ### Production Deployment
@@ -81,10 +88,29 @@ Available targets:
   build              - Build backend Docker image
   build-frontend     - Build frontend Docker image
   logs              - Show docker-compose logs
-  run               - Run backend with docker-compose
+  run               - Run all services (PostgreSQL, Elasticsearch, Django)
+  run-services       - Run supporting services only (PostgreSQL, Elasticsearch)
+  run-web           - Run web application only (requires services to be running)
+  stop              - Stop all running services
   install-frontend   - Install frontend dependencies
   run-frontend       - Run frontend development server locally
+  migrate           - Run backend database migrations
+  test              - Run backend tests
   push TAG=<tag>    - Push backend image with tag
+
+Data Management Commands:
+  populate-candidates       - Create 1,000 test candidates
+  populate-candidates-large - Create 100,000 test candidates
+  clear-populate-candidates - Clear and create 1,000 test candidates
+
+Django Admin Commands:
+  createsuperuser    - Create Django superuser (interactive)
+  shell             - Open Django shell (interactive)
+  dbshell           - Open database shell (interactive)
+
+Development Utilities:
+  check             - Run Django system checks
+  collectstatic     - Collect static files
 
 Helm Commands:
   helm-apply [TAG=<tag>]        - Deploy complete HR system (default: latest)
@@ -96,6 +122,11 @@ Helm Commands:
   helm-template [TAG=<tag>]     - Render templates without applying
 
 Examples:
+  make run                      - Start all services for development
+  make populate-candidates      - Add test data to database
+  make migrate                  - Run database migrations
+  make createsuperuser         - Create admin user
+  make shell                   - Access Django shell
   make helm-apply TAG=v1.0.0    - Deploy with specific image tag
   make helm-apply               - Deploy with latest tag
   make helm-upgrade TAG=v1.1.0  - Upgrade to new version

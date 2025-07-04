@@ -2,44 +2,18 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    image: backend
     ports:
       - "8000:8000"
     volumes:
       - .:/app
-    environment:
-      - DEBUG=1
-      - ELASTICSEARCH_HOSTS=elasticsearch:9200
-      - ELASTICSEARCH_USE_SSL=False
-      - ELASTICSEARCH_VERIFY_CERTS=False
-    depends_on:
-      - postgres
-      - elasticsearch
-  
-  postgres:
-    image: postgres:17.5
-    container_name: postgres17
-    environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./data/pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-  
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - ./data/elasticsearch:/usr/share/elasticsearch/data
-    restart: unless-stopped
+    env_file:
+      - .env
+    external_links:
+      - postgres17:postgres
+      - elasticsearch:elasticsearch
+
+networks:
+  default:
+    name: hr-system
+    external: true

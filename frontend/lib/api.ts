@@ -10,7 +10,7 @@ export const api = axios.create({
 });
 
 export const adminApi = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_URL}/admin`,
   headers: {
     'Content-Type': 'application/json',
     'X-ADMIN': '1',

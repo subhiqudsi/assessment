@@ -37,42 +37,9 @@ export default function Home() {
             <p className="text-gray-600 mb-6">
               Access the admin dashboard to review candidates, download resumes, and manage application statuses.
             </p>
-            <Link href="/admin/login" className="block">
+            <Link href="/admin/dashboard" className="block">
               <Button className="w-full">Admin Login</Button>
             </Link>
-          </div>
-        </div>
-
-        <div className="mt-16 text-center">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-4">How It Works</h3>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg p-6 shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <span className="text-blue-600 font-bold text-xl">1</span>
-              </div>
-              <h4 className="font-semibold mb-2">Submit Application</h4>
-              <p className="text-gray-600 text-sm">
-                Fill out your information and upload your resume in PDF or DOCX format
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <span className="text-blue-600 font-bold text-xl">2</span>
-              </div>
-              <h4 className="font-semibold mb-2">Get Your ID</h4>
-              <p className="text-gray-600 text-sm">
-                Receive a unique candidate ID to track your application status
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <span className="text-blue-600 font-bold text-xl">3</span>
-              </div>
-              <h4 className="font-semibold mb-2">Track Progress</h4>
-              <p className="text-gray-600 text-sm">
-                Check your application status anytime using your candidate ID
-              </p>
-            </div>
           </div>
         </div>
       </div>

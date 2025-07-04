@@ -4,7 +4,7 @@ This directory contains scripts to populate the database with test data for perf
 
 ## 🚀 Quick Start
 
-### Method 1: Django Management Command (Recommended)
+### Django Management Command (Recommended)
 
 ```bash
 # Populate with 100,000 records (default)
@@ -15,16 +15,6 @@ docker-compose exec web python manage.py populate_candidates --count 50000
 
 # Clear existing data and populate
 docker-compose exec web python manage.py populate_candidates --count 100000 --clear
-
-# Custom batch size (for memory optimization)
-docker-compose exec web python manage.py populate_candidates --count 100000 --batch-size 500
-```
-
-### Method 2: Direct Script
-
-```bash
-# Run the standalone script
-docker-compose exec web python populate_data.py
 ```
 
 ## 📊 Performance Testing
@@ -50,7 +40,6 @@ The scripts create realistic test data:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--count` | 100,000 | Number of candidates to create |
-| `--batch-size` | 1,000 | Records per batch |
 | `--clear` | False | Clear existing data first |
 
 ## 📈 Expected Performance

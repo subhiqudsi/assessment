@@ -31,12 +31,12 @@ from drf_spectacular.openapi import OpenApiTypes
                     'description': 'API for managing job applications and candidates',
                     'endpoints': [
                         {
-                            'path': '/api/candidates/register/',
+                            'path': '/api/candidates/',
                             'method': 'POST',
                             'description': 'Register a new candidate'
                         },
                         {
-                            'path': '/api/candidates/{id}/status/',
+                            'path': '/api/candidates/{id}/',
                             'method': 'GET',
                             'description': 'Check candidate status by ID'
                         }
@@ -61,13 +61,13 @@ def api_info(request):
         'description': 'A comprehensive API for managing job applications, candidates, and HR workflows',
         'endpoints': [
             {
-                'path': '/api/candidates/register/',
+                'path': '/api/candidates/',
                 'method': 'POST',
                 'description': 'Register a new candidate with resume upload',
                 'authentication': 'None required'
             },
             {
-                'path': '/api/candidates/{id}/status/',
+                'path': '/api/candidates/{id}/',
                 'method': 'GET',
                 'description': 'Check candidate application status by ID',
                 'authentication': 'None required'
@@ -103,7 +103,7 @@ def api_info(request):
                 'authentication': 'Admin required (X-ADMIN: 1)'
             },
             {
-                'path': '/api/admin/candidates/{id}/download/',
+                'path': '/api/admin/candidates/{id}/resume/',
                 'method': 'GET',
                 'description': 'Download candidate resume file',
                 'authentication': 'Admin required (X-ADMIN: 1)'
