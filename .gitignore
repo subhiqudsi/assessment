@@ -1,5 +1,5 @@
 .idea
-backend/data/pgdata
+backend/data
 backend/logs
 backend/media
 backend/db.sqlite3
