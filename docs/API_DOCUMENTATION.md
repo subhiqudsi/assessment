@@ -59,18 +59,18 @@ http://localhost:8000/api/schema/
 |----------|--------|-------------|----------------|
 | `/api/info/` | GET | API information and metadata | None |
 | `/api/health/` | GET | System health check | None |
-| `/api/candidates/register/` | POST | Register new candidate | None |
-| `/api/candidates/{id}/status/` | GET | Check status by ID | None |
-| `/api/candidates/status/` | GET | Check status by email | None |
-| `/api/candidates/{id}/history/` | GET | Get status history | None |
+| `/api/candidates/` | POST | Register new candidate | None |
+| `/api/candidates/status/` | GET | Check status by email (query param) | None |
+| `/api/candidates/{email}/` | GET | Check status by email (path param) | None |
+| `/api/candidates/{candidate_id}/history/` | GET | Get status history | None |
 
 ### Admin Endpoints
 | Endpoint | Method | Description | Authentication |
 |----------|--------|-------------|----------------|
 | `/api/admin/candidates/` | GET | List all candidates | X-ADMIN: 1 |
-| `/api/admin/candidates/{id}/` | GET | Get candidate details | X-ADMIN: 1 |
-| `/api/admin/candidates/{id}/status/` | PATCH | Update candidate status | X-ADMIN: 1 |
-| `/api/admin/candidates/{id}/download/` | GET | Download resume | X-ADMIN: 1 |
+| `/api/admin/candidates/{candidate_id}/` | GET | Get candidate details | X-ADMIN: 1 |
+| `/api/admin/candidates/{candidate_id}/status/` | PATCH | Update candidate status | X-ADMIN: 1 |
+| `/api/admin/candidates/{candidate_id}/resume/` | GET | Download resume | X-ADMIN: 1 |
 
 ## 🔧 Technical Implementation
 

@@ -20,21 +20,27 @@ The HR System backend is a Django REST Framework application that provides APIs 
 
 - **Candidate Management**: Registration, status tracking, resume upload
 - **Admin Dashboard**: View candidates, download resumes, update statuses
-- **File Handling**: Secure resume upload with validation
+- **File Handling**: Secure resume upload with magic number validation
 - **Status Workflow**: Complete application lifecycle management
-- **Storage Abstraction**: Local filesystem with cloud migration support
+- **Storage Abstraction**: Local filesystem with S3 migration support
+- **API Documentation**: Auto-generated OpenAPI/Swagger docs
 - **Logging**: Comprehensive logging with Elasticsearch integration
+- **Authentication**: Header-based admin authentication system
+- **Data Management**: Custom commands for populating test data
+- **Validation**: Comprehensive file and data validation
 - **Scalability**: Designed for 100,000+ candidate records
 
 ## Architecture
 
 ### Technology Stack
 
-- **Framework**: Django 5.0+ with Django REST Framework
+- **Framework**: Django 5.2.3 with Django REST Framework 3.16.0
 - **Database**: PostgreSQL (production) / SQLite (development)
 - **Storage**: Local filesystem / AWS S3 (configurable)
-- **Authentication**: Header-based admin authentication
+- **Authentication**: Header-based admin authentication (X-ADMIN: 1)
+- **Documentation**: drf-spectacular for OpenAPI/Swagger
 - **Logging**: Python logging with Elasticsearch handler
+- **Validation**: python-magic for file type validation
 - **Containerization**: Docker with docker-compose
 
 ### Project Structure
@@ -43,24 +49,47 @@ The HR System backend is a Django REST Framework application that provides APIs 
 backend/
 ├── job_application/           # Main application
 │   ├── models.py             # Data models
-│   ├── serializers.py        # DRF serializers
+│   ├── serializers/          # DRF serializers (modular)
+│   │   ├── candidate_registration_serializer.py
+│   │   ├── admin_candidate_list_serializer.py
+│   │   ├── admin_candidate_detail_serializer.py
+│   │   ├── candidate_status_serializer.py
+│   │   ├── status_history_serializer.py
+│   │   ├── status_update_serializer.py
+│   │   └── department_filter_serializer.py
+│   ├── views/                # API views (modular)
+│   │   ├── candidate_registration.py
+│   │   ├── candidate_status.py
+│   │   ├── candidate_status_history.py
+│   │   ├── admin_candidate_list.py
+│   │   ├── admin_candidate_detail.py
+│   │   ├── admin_status_update.py
+│   │   └── admin_resume_download.py
 │   ├── validators.py         # Custom validators
-│   ├── views.py              # API views
 │   ├── urls.py               # URL routing
 │   ├── admin.py              # Django admin
 │   ├── notifications.py      # Status notifications
 │   ├── tests.py              # Unit tests
 │   └── management/           # Custom management commands
+│       └── commands/
+│           ├── populate_candidates.py
+│           └── init_elasticsearch.py
 ├── main/                     # Django project
 │   ├── settings.py           # Configuration
 │   ├── urls.py               # Main URL config
-│   ├── authentication.py     # Custom auth
-│   ├── logging_handlers.py   # Custom logging
-│   └── views.py              # Health check
+│   ├── authentication.py     # Custom header auth
+│   ├── logging_handlers.py   # Elasticsearch logging
+│   ├── views.py              # Health check
+│   └── storage_backends/     # Storage abstraction
+│       ├── base.py
+│       ├── factory.py
+│       ├── local.py
+│       └── s3.py
 ├── media/                    # File uploads
 ├── logs/                     # Application logs
 ├── Dockerfile                # Container definition
-├── docker-compose.yml        # Development setup
+├── docker-compose.yml        # Main services
+├── docker-compose.services.yml # Support services
 └── requirements.txt          # Dependencies
 ```
 
@@ -71,29 +100,60 @@ backend/
 ```python
 class Candidate(models.Model):
     full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20, unique=True)
     date_of_birth = models.DateField()
     years_of_experience = models.PositiveIntegerField()
     department = models.CharField(
-        max_length=10,
-        choices=[('IT', 'IT'), ('HR', 'HR'), ('Finance', 'Finance')]
+        max_length=20,
+        choices=Department.choices,
+        default=Department.IT
     )
-    resume = models.FileField(upload_to='resumes/')
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, unique=True)
-    status = models.CharField(max_length=20, default='Submitted')
+    resume = models.FileField(
+        upload_to=resume_upload_path,
+        validators=[validate_resume_file]
+    )
+    status = models.CharField(
+        max_length=30,
+        choices=ApplicationStatus.choices,
+        default=ApplicationStatus.SUBMITTED
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-```
 
-### StatusHistory Model
-
-```python
+# Additional models
 class StatusHistory(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20)
-    feedback = models.TextField(blank=True)
+    previous_status = models.CharField(max_length=30, null=True, blank=True)
+    new_status = models.CharField(max_length=30)
+    comments = models.TextField(blank=True)
     changed_by = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+class NotificationLog(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=50)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='sent')
+```
+
+### Choices Classes
+
+```python
+class Department(models.TextChoices):
+    IT = 'IT', 'Information Technology'
+    HR = 'HR', 'Human Resources'
+    FINANCE = 'FINANCE', 'Finance'
+
+class ApplicationStatus(models.TextChoices):
+    SUBMITTED = 'SUBMITTED', 'Submitted'
+    UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
+    INTERVIEW_SCHEDULED = 'INTERVIEW_SCHEDULED', 'Interview Scheduled'
+    REJECTED = 'REJECTED', 'Rejected'
+    ACCEPTED = 'ACCEPTED', 'Accepted'
 ```
 
 ## File Storage
@@ -103,21 +163,43 @@ class StatusHistory(models.Model):
 The system implements a storage abstraction layer for easy migration between storage backends:
 
 ```python
-class StorageBackend:
-    def save_file(self, file, path):
+class BaseStorage(ABC):
+    @abstractmethod
+    def save(self, name, content):
+        """Save file content with given name"""
         pass
     
-    def get_file(self, path):
+    @abstractmethod
+    def url(self, name):
+        """Return URL for accessing the file"""
         pass
     
-    def delete_file(self, path):
+    @abstractmethod
+    def delete(self, name):
+        """Delete the file"""
+        pass
+    
+    @abstractmethod
+    def exists(self, name):
+        """Check if file exists"""
         pass
 
-class LocalStorageBackend(StorageBackend):
+class LocalStorage(BaseStorage):
     # Local filesystem implementation
     
-class S3StorageBackend(StorageBackend):
+class S3Storage(BaseStorage):
     # AWS S3 implementation
+
+# Factory for creating storage instances
+class StorageFactory:
+    @staticmethod
+    def create_storage(backend_type='local'):
+        if backend_type == 'local':
+            return LocalStorage()
+        elif backend_type == 's3':
+            return S3Storage()
+        else:
+            raise ValueError(f"Unknown storage backend: {backend_type}")
 ```
 
 
@@ -144,7 +226,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1,api.hr-system.local
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://hr-system.local
 
 # Storage
-STORAGE_TYPE=local  # or s3
+STORAGE_BACKEND=local  # or s3
 AWS_ACCESS_KEY_ID=your-key
 AWS_SECRET_ACCESS_KEY=your-secret
 AWS_STORAGE_BUCKET_NAME=hr-system-files

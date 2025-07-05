@@ -234,9 +234,9 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/candidates/register/",
+              "raw": "{{baseUrl}}/api/candidates/",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "candidates", "register", ""]
+              "path": ["api", "candidates", ""]
             },
             "description": "Register a new job candidate with resume upload"
           }
@@ -671,9 +671,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/candidates/{{candidateId}}/download/",
+              "raw": "{{baseUrl}}/api/admin/candidates/{{candidateId}}/resume/",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "candidates", "{{candidateId}}", "download", ""]
+              "path": ["api", "admin", "candidates", "{{candidateId}}", "resume", ""]
             },
             "description": "Download a candidate's resume file (PDF or DOCX)"
           }
@@ -763,9 +763,9 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/candidates/register/",
+              "raw": "{{baseUrl}}/api/candidates/",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "candidates", "register", ""]
+              "path": ["api", "candidates", ""]
             },
             "description": "Test validation errors in candidate registration"
           }
@@ -837,9 +837,9 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/candidates/register/",
+              "raw": "{{baseUrl}}/api/candidates/",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "candidates", "register", ""]
+              "path": ["api", "candidates", ""]
             },
             "description": "Test duplicate email validation"
           }

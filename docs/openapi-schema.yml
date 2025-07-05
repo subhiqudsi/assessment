@@ -38,10 +38,10 @@ paths:
                     name: Job Application Management API
                     description: API for managing job applications and candidates
                     endpoints:
-                    - path: /api/candidates/register/
+                    - path: /api/candidates/
                       method: POST
                       description: Register a new candidate
-                    - path: /api/candidates/{id}/status/
+                    - path: /api/candidates/{id}/
                       method: GET
                       description: Check candidate status by ID
                     departments:
@@ -101,7 +101,7 @@ paths:
                     error: Database connection timeout
                     timestamp: '2024-01-01T12:00:00Z'
           description: ''
-  /api/candidates/register/:
+  /api/candidates/:
     post:
       operationId: candidate_register
       description: "\n        Register a new candidate for a job position. This endpoint\
@@ -156,9 +156,9 @@ paths:
                 additionalProperties: {}
                 description: Unspecified response body
           description: ''
-  /api/candidates/{candidate_id}/status/:
+  /api/candidates/status/:
     get:
-      operationId: candidate_status_check_2
+      operationId: candidate_status_check
       description: "\n        Check the status of a candidate's job application. You\
         \ can check status either by:\n        1. Candidate ID (in URL path)\n   \
         \     2. Email address (as query parameter)\n        \n        The response\
@@ -226,9 +226,9 @@ paths:
                     success: false
                     message: Candidate not found
           description: ''
-  /api/candidates/status/:
+  /api/candidates/{email}/:
     get:
-      operationId: candidate_status_check
+      operationId: candidate_status_check_2
       description: "\n        Check the status of a candidate's job application. You\
         \ can check status either by:\n        1. Candidate ID (in URL path)\n   \
         \     2. Email address (as query parameter)\n        \n        The response\
@@ -241,6 +241,11 @@ paths:
         schema:
           type: integer
         description: Unique ID of the candidate
+        required: true
+      - in: path
+        name: email
+        schema:
+          type: string
         required: true
       - in: query
         name: email
@@ -432,7 +437,7 @@ paths:
                         application/json:
                           success: true
                           total_count: 150
-                          candidates:
+                          results:
                           - id: 123
                             full_name: John Doe
                             email: john.doe@example.com
@@ -601,7 +606,7 @@ paths:
                       status:
                       - Candidate is already in this status.
           description: ''
-  /api/admin/candidates/{candidate_id}/download/:
+  /api/admin/candidates/{candidate_id}/resume/:
     get:
       operationId: admin_download_resume
       description: "\n        **Admin Only**: Download the resume file for a specific\

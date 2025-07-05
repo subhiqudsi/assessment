@@ -94,20 +94,9 @@ hr-system/
 3. View current status and history
 
 ### Admin Access
-1. Click "Admin Login"
-2. Use password: `admin123`
-3. View and manage candidates
-4. Download resumes
-5. Update application statuses
-
-## API Integration
-
-The frontend integrates with the Django backend API:
-- `POST /api/candidates/` - Register new candidate
-- `GET /api/candidates/{id}/status/` - Check application status
-- `GET /api/candidates/` - List all candidates (admin)
-- `GET /api/candidates/{id}/resume/` - Download resume (admin)
-- `PATCH /api/candidates/{id}/status/` - Update status (admin)
+1. View and manage candidates
+2. Download resumes
+3. Update application statuses
 
 ## Development
 
