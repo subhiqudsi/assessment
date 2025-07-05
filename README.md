@@ -86,10 +86,9 @@ assessment/
 ### Local Development
 
 ```bash
-# 1. Start all backend services (PostgreSQL, Elasticsearch, Django)
-make run
+# 1. Build backend docker image
+make build
 
-# Alternative: Start services separately for more control
 make run-services    # Start PostgreSQL & Elasticsearch
 make run-web        # Start Django application
 
