@@ -1,4 +1,4 @@
-.PHONY: build logs run run-services run-web stop push build-frontend run-frontend install-frontend migrate test populate-candidates populate-candidates-large clear-populate-candidates createsuperuser shell dbshell check collectstatic helm-apply helm-delete helm-upgrade help
+.PHONY: build logs run run-services run-web stop push build-frontend run-frontend install-frontend migrate make-migrations test populate-candidates populate-candidates-large clear-populate-candidates createsuperuser shell dbshell check collectstatic helm-apply helm-delete helm-upgrade help
 
 # Default tag if not provided
 TAG ?= latest
@@ -42,6 +42,9 @@ run-frontend:
 	@echo "Starting frontend development server..."
 	cd frontend && npm run dev
 
+make-migrations:
+	@echo "Running django make migrations..."
+	docker exec backend-web-1 python manage.py makemigrations
 migrate:
 	@echo "Running backend database migrations..."
 	docker exec backend-web-1 python manage.py migrate
@@ -67,6 +70,15 @@ clear-populate-candidates:
 createsuperuser:
 	@echo "Creating Django superuser..."
 	docker exec -it backend-web-1 python manage.py createsuperuser
+
+# Elasticsearch commands
+init-elasticsearch:
+	@echo "Initializing Elasticsearch index for Django logs..."
+	docker exec backend-web-1 python manage.py init_elasticsearch
+
+init-elasticsearch-force:
+	@echo "Force recreating Elasticsearch index for Django logs..."
+	docker exec backend-web-1 python manage.py init_elasticsearch --force
 
 shell:
 	@echo "Opening Django shell..."
@@ -149,6 +161,7 @@ help:
 	@echo "  stop              - Stop all running services"
 	@echo "  install-frontend   - Install frontend dependencies"
 	@echo "  run-frontend       - Run frontend development server locally"
+	@echo "  make-migrations     - Run django makemigrations"
 	@echo "  migrate           - Run backend database migrations"
 	@echo "  test              - Run backend tests"
 	@echo "  push TAG=<tag>    - Push backend image with tag"
@@ -166,6 +179,10 @@ help:
 	@echo "Development Utilities:"
 	@echo "  check             - Run Django system checks"
 	@echo "  collectstatic     - Collect static files"
+	@echo ""
+	@echo "Elasticsearch Commands:"
+	@echo "  init-elasticsearch       - Initialize Elasticsearch index for logs"
+	@echo "  init-elasticsearch-force - Force recreate Elasticsearch index"
 	@echo ""
 	@echo "Helm Commands:"
 	@echo "  helm-apply [TAG=<tag>]        - Deploy complete HR system (default: latest)"

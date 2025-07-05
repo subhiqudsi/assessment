@@ -1,12 +1,13 @@
 import logging
 import json
+import threading
 from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
 from django.conf import settings
 
 
 class ElasticsearchHandler(logging.Handler):
-    def __init__(self, hosts, index_name='django-logs', doc_type='_doc', 
+    def __init__(self, hosts, index_name='hr-system-logs', doc_type='_doc',
                  use_ssl=False, verify_certs=True, 
                  auth_type='basic', auth_details=None,
                  buffer_size=1000, flush_interval=1.0):
@@ -18,6 +19,8 @@ class ElasticsearchHandler(logging.Handler):
         self.buffer_size = buffer_size
         self.flush_interval = flush_interval
         self.es = None
+        self._timer = None
+        self._lock = threading.Lock()
         
         try:
             # Simple configuration for Elasticsearch client
@@ -43,6 +46,9 @@ class ElasticsearchHandler(logging.Handler):
                 if not self.es.ping():
                     print(f"Warning: Elasticsearch at {hosts} is not responding")
                     self.es = None
+                else:
+                    # Start periodic flush timer
+                    self._start_flush_timer()
             except Exception as ping_error:
                 print(f"Warning: Cannot ping Elasticsearch: {ping_error}")
                 self.es = None
@@ -57,12 +63,23 @@ class ElasticsearchHandler(logging.Handler):
             
         try:
             log_entry = self.format_record(record)
-            self.buffer.append({
-                '_index': f"{self.index_name}-{datetime.now().strftime('%Y.%m.%d')}",
-                '_source': log_entry
-            })
             
-            if len(self.buffer) >= self.buffer_size:
+            with self._lock:
+                self.buffer.append({
+                    '_index': f"{self.index_name}-{datetime.now().strftime('%Y.%m.%d')}",
+                    '_source': log_entry
+                })
+                
+                # Check if we should flush
+                should_flush = (
+                    record.levelname in ('ERROR', 'CRITICAL', 'WARNING') or 
+                    len(self.buffer) >= self.buffer_size or
+                    'Status updated' in record.getMessage() or 
+                    'registration successful' in record.getMessage()
+                )
+            
+            # Flush outside the lock to avoid blocking
+            if should_flush:
                 self.flush()
                 
         except Exception as e:
@@ -112,7 +129,8 @@ class ElasticsearchHandler(logging.Handler):
             log_entry['action'] = record.action
             
         if record.exc_info:
-            log_entry['exception'] = self.formatException(record.exc_info)
+            import traceback
+            log_entry['exception'] = ''.join(traceback.format_exception(*record.exc_info))
             
         # Include any custom fields added to the record
         for key, value in record.__dict__.items():
@@ -130,13 +148,31 @@ class ElasticsearchHandler(logging.Handler):
                     
         return log_entry
     
+    def _start_flush_timer(self):
+        """Start a timer to periodically flush the buffer"""
+        if self._timer:
+            self._timer.cancel()
+        self._timer = threading.Timer(self.flush_interval, self._periodic_flush)
+        self._timer.daemon = True
+        self._timer.start()
+    
+    def _periodic_flush(self):
+        """Periodically flush the buffer"""
+        with self._lock:
+            if self.buffer:
+                self.flush()
+        # Restart the timer
+        if self.es:
+            self._start_flush_timer()
+    
     def flush(self):
         if not self.es or not self.buffer:
             return
             
         try:
-            helpers.bulk(self.es, self.buffer)
-            self.buffer = []
+            with self._lock:
+                helpers.bulk(self.es, self.buffer)
+                self.buffer = []
         except Exception as e:
             # Use print instead of logging to avoid recursion
             print(f"Failed to write logs to Elasticsearch: {e}")
@@ -144,5 +180,7 @@ class ElasticsearchHandler(logging.Handler):
             self.buffer = []
     
     def close(self):
+        if self._timer:
+            self._timer.cancel()
         self.flush()
         super().close()

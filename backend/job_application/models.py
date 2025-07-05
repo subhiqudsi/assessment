@@ -73,7 +73,8 @@ class Candidate(models.Model):
         validators=[
             FileExtensionValidator(allowed_extensions=['pdf', 'docx']),
         ],
-        help_text="Resume file (PDF or DOCX, max 5MB)"
+        help_text="Resume file (PDF or DOCX, max 5MB)",
+        blank=True
     )
 
     # Application Status
@@ -81,7 +82,7 @@ class Candidate(models.Model):
         max_length=30,
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.SUBMITTED,
-        help_text="Current application status"
+        help_text="Current application status",
     )
 
     # Timestamps
@@ -122,8 +123,22 @@ class Candidate(models.Model):
                 raise ValidationError("Candidate must be at least 16 years old.")
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+        # Check if this is a new instance (no pk yet)
+        if not self.pk:
+            # Store the resume temporarily
+            temp_resume = self.resume
+            # Set resume to None for initial save
+            self.resume = None
+            # Save without validation to get the ID
+            super().save(*args, **kwargs)
+            # Now set the resume and save again
+            self.resume = temp_resume
+            if temp_resume:
+                super().save(update_fields=['resume'])
+        else:
+            # For updates, run validation and save normally
+            self.full_clean()
+            super().save(*args, **kwargs)
 
 
 class StatusHistory(models.Model):

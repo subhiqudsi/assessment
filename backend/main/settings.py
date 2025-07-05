@@ -223,8 +223,8 @@ LOGGING = {
                 'api_key': ELASTICSEARCH_API_KEY,
             },
             'index_name': 'hr-system-logs',
-            'buffer_size': 100,
-            'flush_interval': 1.0,
+            'buffer_size': 10,  # Reduced for more frequent flushing
+            'flush_interval': 2.0,  # Flush every 2 seconds
         },
     },
     'loggers': {
@@ -314,3 +314,5 @@ SPECTACULAR_SETTINGS = {
         'hideSingleRequestSampleTab': True,
     },
 }
+
+DEFAULT_FILE_STORAGE = 'main.storage_backends.factory.get_storage_backend'

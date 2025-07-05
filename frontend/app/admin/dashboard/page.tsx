@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { DEPARTMENTS, STATUS_COLORS } from '@/utils/constants';
 import { format } from 'date-fns';
-import { Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, ChevronLeft, ChevronRight, History } from 'lucide-react';
 
 interface Candidate {
   id: number;
@@ -28,6 +28,39 @@ interface PaginatedResponse {
   previous: string | null;
 }
 
+interface StatusHistoryItem {
+  id: number;
+  previous_status: string | null;
+  previous_status_display: string | null;
+  new_status: string;
+  new_status_display: string;
+  comments: string;
+  changed_by: string;
+  changed_at: string;
+}
+
+interface CandidateDetailResponse {
+  success: boolean;
+  candidate: {
+    id: number;
+    full_name: string;
+    email: string;
+    phone_number: string;
+    date_of_birth: string;
+    age: number;
+    years_of_experience: number;
+    department: string;
+    department_display: string;
+    status: string;
+    status_display: string;
+    has_resume: boolean;
+    resume_filename: string;
+    created_at: string;
+    updated_at: string;
+    status_history: StatusHistoryItem[];
+  };
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -40,6 +73,9 @@ export default function AdminDashboard() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [candidateDetail, setCandidateDetail] = useState<CandidateDetailResponse | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
 
@@ -100,6 +136,19 @@ export default function AdminDashboard() {
       fetchCandidates();
     } catch (err: any) {
       alert('Failed to update status');
+    }
+  };
+
+  const fetchCandidateDetail = async (candidateId: number) => {
+    setHistoryLoading(true);
+    try {
+      const response = await adminApi.get<CandidateDetailResponse>(`/candidates/${candidateId}/`);
+      setCandidateDetail(response.data);
+      setShowHistoryModal(true);
+    } catch (err: any) {
+      alert('Failed to fetch candidate details');
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -185,7 +234,7 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                        {format(new Date(candidate.created_at), 'MMM dd, yyyy')}
+                        {format(new Date(candidate.created_at), 'MMM dd, yyyy HH:mm')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
@@ -194,6 +243,14 @@ export default function AdminDashboard() {
                             onClick={() => downloadResume(candidate.id, candidate.full_name)}
                           >
                             <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => fetchCandidateDetail(candidate.id)}
+                            disabled={historyLoading}
+                          >
+                            <History className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
@@ -289,6 +346,99 @@ export default function AdminDashboard() {
               >
                 Cancel
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && candidateDetail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Candidate Details & Status History</h2>
+                  <p className="text-gray-900 mt-1">
+                    {candidateDetail.candidate.full_name} (ID: {candidateDetail.candidate.id})
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <p className="text-sm text-gray-900">
+                      Current Status: <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(candidateDetail.candidate.status_display)}`}>
+                        {candidateDetail.candidate.status_display}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-900">
+                      Department: {candidateDetail.candidate.department_display}
+                    </p>
+                    <p className="text-sm text-gray-900">
+                      Experience: {candidateDetail.candidate.years_of_experience} years
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setShowHistoryModal(false);
+                    setCandidateDetail(null);
+                  }}
+                  variant="secondary"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {candidateDetail.candidate.status_history.length === 0 ? (
+                <p className="text-center text-gray-900 py-8">No status history available.</p>
+              ) : (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Change History</h3>
+                  {candidateDetail.candidate.status_history.map((item, index) => (
+                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          {item.previous_status && (
+                            <>
+                              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.previous_status_display || item.previous_status)}`}>
+                                {item.previous_status_display || item.previous_status}
+                              </span>
+                              <span className="text-gray-900">→</span>
+                            </>
+                          )}
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.new_status_display)}`}>
+                            {item.new_status_display}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-900 font-medium">
+                            {format(new Date(item.changed_at), 'MMM dd, yyyy')}
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {format(new Date(item.changed_at), 'HH:mm')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-900">Changed by:</span>
+                          <span className="ml-2 text-gray-900">{item.changed_by}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-900">Change #{candidateDetail.candidate.status_history.length - index}</span>
+                        </div>
+                      </div>
+                      
+                      {item.comments && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                          <p className="font-medium text-gray-900 text-sm mb-1">Comments:</p>
+                          <p className="text-gray-900 text-sm">{item.comments}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
