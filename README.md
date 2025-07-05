@@ -117,13 +117,14 @@ make stop
 make build TAG=v1.0.0
 make build-frontend TAG=v1.0.0
 
+# Docker Push
+docker login
+make push {{TAG}}
+
 # Deploy to Kubernetes
 make helm-apply TAG=v1.0.0
-
-# Access via ingress
-# Frontend: http://hr-system.local
-# Backend: http://api.hr-system.local
 ```
+#### TODO Adjustments are needed for serving on gunicorn and entrypoint
 
 ## 📋 Makefile Commands
 
