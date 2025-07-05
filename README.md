@@ -14,26 +14,65 @@ A complete HR system that allows job applicants to register as candidates and up
 
 ```
 assessment/
-├── backend/                 # Django REST API
-│   ├── job_application/    # Main application
-│   ├── main/               # Django settings
-│   ├── Dockerfile          # Backend container
-│   ├── docker-compose.yml  # Development setup
-│   └── requirements.txt    # Python dependencies
-├── frontend/               # Next.js application
-│   ├── app/               # Next.js 14 app directory
+├── backend/                        # Django REST API
+│   ├── job_application/           # Main application module
+│   │   ├── management/           # Django management commands
+│   │   │   └── commands/        # Custom commands (populate_candidates, init_elasticsearch)
+│   │   ├── migrations/          # Database migrations
+│   │   ├── serializers/         # DRF serializers (modular structure)
+│   │   ├── views/              # API views (modular structure)
+│   │   ├── models.py           # Data models (Candidate, StatusHistory, etc.)
+│   │   ├── notifications.py    # Email notification system
+│   │   ├── validators.py       # Custom validators
+│   │   └── urls.py            # Application URL routing
+│   ├── main/                   # Django project settings
+│   │   ├── management/        # Project-level management commands
+│   │   ├── storage_backends/  # Storage abstraction (local/S3)
+│   │   ├── authentication.py  # Custom authentication
+│   │   ├── logging_handlers.py # Elasticsearch logging handler
+│   │   ├── settings.py       # Django configuration
+│   │   └── urls.py          # Root URL configuration
+│   ├── scripts/              # Utility scripts
+│   ├── Dockerfile           # Backend container configuration
+│   ├── docker-compose.yml   # Main services (Django)
+│   ├── docker-compose.services.yml # Support services (PostgreSQL, Elasticsearch)
+│   └── requirements.txt     # Python dependencies
+├── frontend/                # Next.js application
+│   ├── app/                # Next.js 14 app directory structure
+│   │   ├── admin/         # Admin pages (login, dashboard)
+│   │   ├── candidate/     # Candidate pages (register, status)
+│   │   ├── globals.css    # Global styles
+│   │   ├── layout.tsx     # Root layout
+│   │   └── page.tsx       # Home page
 │   ├── components/        # Reusable React components
-│   ├── lib/              # API client and utilities
-│   ├── package.json      # Node.js dependencies
-│   └── README.md         # Frontend documentation
-├── helm/                  # Kubernetes deployment
-│   ├── backend/          # Backend Helm chart
-│   ├── frontend/         # Frontend Helm chart
-│   ├── hr-system/        # Umbrella chart
-│   └── README.md         # Helm documentation
-├── docs/                  # Additional documentation
-├── Makefile              # Build and deployment automation
-└── README.md             # This file
+│   │   ├── AdminDashboard.tsx
+│   │   ├── CandidateForm.tsx
+│   │   ├── CandidateList.tsx
+│   │   ├── StatusBadge.tsx
+│   │   └── StatusModal.tsx
+│   ├── lib/              # Utilities and API client
+│   │   ├── api.ts       # API client configuration
+│   │   └── types.ts     # TypeScript type definitions
+│   ├── public/          # Static assets
+│   ├── Dockerfile       # Frontend container configuration
+│   ├── package.json     # Node.js dependencies
+│   └── README.md        # Frontend documentation
+├── helm/                # Kubernetes deployment charts
+│   ├── backend/        # Backend Helm chart
+│   ├── frontend/       # Frontend Helm chart
+│   ├── hr-system/      # Umbrella chart for full deployment
+│   └── README.md       # Helm deployment guide
+├── docs/               # Project documentation
+│   ├── API_DOCUMENTATION.md        # API endpoints reference
+│   ├── BACKEND_DOCUMENTATION.md    # Backend setup and deployment
+│   ├── README_POPULATE.md          # Database population guide
+│   ├── openapi-schema.yml          # OpenAPI specification
+│   ├── test_serializers_summary.md # Testing documentation
+│   └── Job_Application_API.postman_collection.json # Postman collection
+├── init_elasticsearch.sh    # Elasticsearch index initialization script
+├── Makefile                # Build and deployment automation
+├── test_resume.pdf         # Test file for uploads
+└── README.md              # This file
 ```
 
 ## 🚀 Quick Start
@@ -53,6 +92,11 @@ make run
 # Alternative: Start services separately for more control
 make run-services    # Start PostgreSQL & Elasticsearch
 make run-web        # Start Django application
+
+# For the First Time Only
+make init-elasticsearch
+make migrate
+
 
 # 2. Install and start frontend
 make install-frontend
@@ -111,6 +155,10 @@ Django Admin Commands:
 Development Utilities:
   check             - Run Django system checks
   collectstatic     - Collect static files
+
+Elasticsearch Commands:
+  init-elasticsearch       - Initialize Elasticsearch index for logs
+  init-elasticsearch-force - Force recreate Elasticsearch index
 
 Helm Commands:
   helm-apply [TAG=<tag>]        - Deploy complete HR system (default: latest)
