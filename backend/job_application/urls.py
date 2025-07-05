@@ -15,7 +15,6 @@ urlpatterns = [
     # Candidate endpoints
     path('candidates/', CandidateRegistrationView.as_view(), name='candidates'),  # POST for registration
     path('candidates/status/', CandidateStatusView.as_view(), name='candidate_status'),  # GET with email param
-    path('candidates/<email>/', CandidateStatusView.as_view(), name='candidate_detail'),  # GET by ID
     path('candidates/<int:candidate_id>/history/', CandidateStatusHistoryView.as_view(), name='candidate_history'),
     
     # Admin endpoints

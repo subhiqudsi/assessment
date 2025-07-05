@@ -61,7 +61,6 @@ http://localhost:8000/api/schema/
 | `/api/health/` | GET | System health check | None |
 | `/api/candidates/` | POST | Register new candidate | None |
 | `/api/candidates/status/` | GET | Check status by email (query param) | None |
-| `/api/candidates/{email}/` | GET | Check status by email (path param) | None |
 | `/api/candidates/{candidate_id}/history/` | GET | Get status history | None |
 
 ### Admin Endpoints

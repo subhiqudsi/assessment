@@ -67,12 +67,6 @@ def api_info(request):
                 'authentication': 'None required'
             },
             {
-                'path': '/api/candidates/{id}/',
-                'method': 'GET',
-                'description': 'Check candidate application status by ID',
-                'authentication': 'None required'
-            },
-            {
                 'path': '/api/candidates/status/',
                 'method': 'GET',
                 'description': 'Check candidate application status by email',
